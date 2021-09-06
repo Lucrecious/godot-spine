@@ -1,0 +1,35 @@
+# SCsub
+import glob
+
+Import('env')
+
+sources = [
+    "register_types.cpp",
+    "batcher.cpp",
+    "spine_data.cpp",
+    "spine_sprite.cpp",
+    "spine_track.cpp",
+    "spine_mix_settings.cpp",
+    "state.cpp"
+]
+
+sources += glob.glob('spine-cpp/src/spine/*.cpp')
+
+module_env = env.Clone()
+module_env.Append(CCFLAGS=['-O2'])
+module_env.Append(CXXFLAGS=['-std=c++17'])
+
+module_env.Append(CPPPATH=['../'])
+module_env.Append(CPPPATH=['spine-cpp/include/'])
+
+if ARGUMENTS.get('spine_shared', 'no') == 'yes':
+    # Shared lib compilation
+    module_env.Append(CCFLAGS=['-fPIC'])
+    module_env['LIBS'] = []
+    shared_lib = module_env.SharedLibrary(target='#bin/summator', source=sources)
+    shared_lib_shim = shared_lib[0].name.split('.', 1)[0]
+    env.Append(LIBS=[shared_lib_shim])
+    env.Append(LIBPATH=['#bin'])
+else:
+    # Static compilation
+    module_env.add_source_files(env.modules_sources, sources)
